@@ -43,9 +43,9 @@ class Ball:
         b = 2*np.dot(rel_vel, rel_pos)
         c = np.dot(rel_pos, rel_pos) - R**2
         
-        if (b**2 - (4*a*c))<0:
+        if (b**2 - (4*a*c))<0 :
             return None
-        elif b>0:
+        elif b>0 and other._mass != np.inf:
             return None
         t = min((-b + np.sqrt(b**2 - 4*a*c))/(2*a),(-b - np.sqrt(b**2 - 4*a*c))/(2*a))
         if t<0:
@@ -72,12 +72,12 @@ class Ball:
             v_norm_arr = v_norm*new_pos_norm
             v_par_arr = self.vel() - v_norm_arr
             final_v = v_par_arr - v_norm_arr
-            print(self.vel(), self.pos(),other.vel())
-            print(time, "time")
-            print(new_pos, "new pos")
-            print(new_pos_norm, "pos new")
-            print(v_norm_arr, "v_norm")
-            print(v_par_arr, "v parallel")
+            # print(self.vel(), self.pos(),other.vel())
+            # print(time, "time")
+            # print(new_pos, "new pos")
+            # print(new_pos_norm, "pos new")
+            # print(v_norm_arr, "v_norm")
+            # print(v_par_arr, "v parallel")
             self._velocity = final_v
         else:    
             rel_vel = self.vel() - other.vel()
