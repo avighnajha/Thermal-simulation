@@ -13,10 +13,10 @@ class Ball:
         self._radius = radius
         self._position = position
         self._velocity = velocity
-        if self._radius <0:
-            self._patch = pl.Circle(position, radius, ec = "b" ,fill = False)
-        else:
-            self._patch = pl.Circle(position, radius, fc = "r")
+        # if self._radius <0:
+        #     self._patch = pl.Circle(position, radius, ec = "b" ,fill = False)
+        # else:
+        #     self._patch = pl.Circle(position, radius, fc = "r")
         
         #axes.add_patch(self.ball_patch)
         
@@ -25,7 +25,11 @@ class Ball:
     def vel(self):
         return self._velocity
     def get_patch(self):
-        return self._patch
+        if self._radius <0:
+            patch = pl.Circle(self.pos(), self._radius, ec = "b" ,fill = False)
+        else:
+            patch = pl.Circle(self.pos(), self._radius, fc = "r")
+        return patch
     def time_to_collision(self, other):
         rel_vel = self.vel() - other.vel()
         rel_pos = self.pos() - other.pos()
@@ -48,7 +52,7 @@ class Ball:
         elif b>0 and other._mass != np.inf:
             return None
         t = min((-b + np.sqrt(b**2 - 4*a*c))/(2*a),(-b - np.sqrt(b**2 - 4*a*c))/(2*a))
-        if t<0:
+        if t<=0:
             t = max((-b + np.sqrt(b**2 - 4*a*c))/(2*a),(-b - np.sqrt(b**2 - 4*a*c))/(2*a))       
         
         return t
@@ -56,8 +60,11 @@ class Ball:
     
     def move(self, dt):
         new_position = self.pos() +(dt*self._velocity) 
+        
         self._position = new_position
-        self._patch.center = new_position
+        #self._patch.center = new_position
+        self.get_patch().center = new_position
+
         return self
         
     def collide(self, other):
@@ -98,11 +105,14 @@ class Simulation:
         self._ball = ball
     
     def next_collision(self):
+        
         t_col = self._ball.time_to_collision(self._container)
-        print(t_col, self._ball.vel())
+        print("v before col", self._ball.vel(), ", collision time", t_col, )
         self._ball.move(t_col)
         self._ball.collide(self._container)
-       
+        
+        
+        print(", v post col", self._ball.vel())
         return self
     
     def run(self, num_frames, animate = False):
@@ -113,17 +123,21 @@ class Simulation:
             ax.add_patch(self._ball.get_patch())
             
         for frame in range(num_frames):
+            KEi = (self._ball._mass*np.dot(self._ball.vel(),self._ball.vel()))/2
             self.next_collision()
+            KEf = (self._ball._mass*np.dot(self._ball.vel(),self._ball.vel()))/2
+            if abs(KEi - KEf)<0.001:
+                print("KE conserved")
+            else:
+                print("KE not conserved")
+            print("ball pos", self._ball.pos())
+            print(self._ball.get_patch())
             if animate:
-                pl.pause(0.001)
-        if animate:
+                pl.pause(0.01)
+
+        if animate == True:
             pl.show()
-        
-         
-             
-        
-        
     
-
-
-#%%
+"""
+time to collide 0 for all so .move() foesnt actually move it cuz dt*vel = 0 so pos stays same. Need to update position.
+"""
