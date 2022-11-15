@@ -37,6 +37,13 @@ np.testing.assert_array_equal(ball8.collide(c).vel(), [0,-1])
 np.testing.assert_array_equal(c.vel(), [0,0])
 #%%
 '''
+Time to collide but ball already in contact and moving in other direction
+'''
+#This test is failing as app it isnt taking the velcoity being in the oposite direction into account
+b10 = bs.Ball(1, 1, [-9,0], [1, 0])
+print(b10.time_to_collision(c))
+#%%
+'''
 Ball and container ball going [-1, 0]
 '''
 b2 = bs.Ball(1, 1, [0, 0], [-1,0])
@@ -61,16 +68,44 @@ ball6 = bs.Ball(1, 1, [0,0], [7, 0])
 np.testing.assert_array_equal(ball6.move(2).pos(), [14,0])
 #%%
 '''
-Testing simulation
+Testing simulation - next collision
 '''
 
-ball7 = bs.Ball(1, 1, [-5, 0], [0,1])
-
+ball7 = bs.Ball(1, 1, [-5, 0], [0, 1])
+c2 = bs.Ball(np.inf, -10, [0,0], [0,0])
 #%%
 '''
 repeated next collisions lead to ball going through centre so only 2 velocities that alternate
 '''
-simul = bs.Simulation(c, ball7)
-print(ball7.time_to_collision(c))
-simul.next_collision()
-print(ball7.vel(), ball7.time_to_collision(c))
+simul = bs.Simulation(c2, ball7)
+print(ball7.time_to_collision(c2))
+#simul.next_collision().run(num_frames=1, animate = True)
+#print(ball7.vel(), ball7.time_to_collision(c2))
+#%%
+'''
+Testing run()
+'''
+simul.next_collision().run(num_frames=5, animate = True)
+#%%
+'''
+Testing Pressure
+'''
+ball8 = bs.Ball(1, 1, [0,0], [0,1])
+simul2 = bs.Simulation(c2, ball8)
+simul2.next_collision().run(num_frames = 5, animate = True)
+
+#%%
+'''
+Several balls
+'''
+bb1 = bs.Ball(1, 1, [0,0], [0,1])
+bb2 = bs.Ball(1, 1, [0,9], [0,-1])
+bb3 = bs.Ball(1, 1, [5, 0], [1, 0])
+bb4 = bs.Ball(1, 1, [4, 0], [2, 0])
+
+balls=[bb1, bb2, bb3]
+simul3 = bs.Simulation(c2, balls)
+
+simul3.next_collision().run(num_frames=2)
+
+

@@ -19,7 +19,8 @@ class Ball:
         #     self._patch = pl.Circle(position, radius, fc = "r")
         
         #axes.add_patch(self.ball_patch)
-        
+    def __repr__(self):
+        return f"Ball at {self._position}, with speed {self._velocity}"
     def pos(self):
         return self._position
     def vel(self):
@@ -100,19 +101,56 @@ class Ball:
     
 
 class Simulation:
-    def __init__(self,container, ball):
+    def __init__(self,container, balls):
         self._container = container
-        self._ball = ball
+        self._balls = balls
+        self._balls.append(self._container)
     
     def next_collision(self):
+        t_col_info = []
+        t_min_col = np.inf
+        print("All Balls", self._balls)
+        for i in range(len(self._balls)):
+            for j in range(len(self._balls)):
+                if i ==j:
+                    continue
+                t_col = self._balls[i].time_to_collision(self._balls[j])
+                if t_col == None:
+                    
+                    continue
+                #print(t_col, t_min_col)
+
+                if t_col<t_min_col:
+                    t_min_col = t_col
+                    t_col_info = [self._balls[i], self._balls[j], t_col]
+                    #print(t_col_info)
+                    
+        for k in range(len(self._balls)):
+            self._balls[k].move(t_min_col)
         
-        t_col = self._ball.time_to_collision(self._container)
-        print("v before col", self._ball.vel(), ", collision time", t_col, )
-        self._ball.move(t_col)
-        self._ball.collide(self._container)
+        print("Balls pre col", t_col_info)
+        # ball1 = t_col_info[0]
+        # ball2 = t_col_info[1]
+        # KEi1 = np.dot(ball1.vel(), ball1.vel())* ball1._mass/2
+        # KEi2 = np.dot(ball2.vel(), ball2.vel())* ball2._mass/2
         
+        t_col_info[0].collide(t_col_info[1])
         
-        print(", v post col", self._ball.vel())
+        # KEf1 = = np.dot(ball1.vel(), ball1.vel())* ball1._mass/2
+        # KEf2 = np.dot(ball2.vel(), ball2.vel())* ball2._mass/2
+        
+        # if KEi1 == KEf1 and KEi2 == KEf2:
+        #     print("ALL KE CONSERVED")
+        
+        #t_col = self._balls.time_to_collision(self._container)
+        #print("v before col", self._balls.vel(), ", collision time", t_col, )
+        # self._balls.move(t_col)
+        # self._balls.collide(self._container)
+        #print(", v post col", self._balls.vel())
+        print("Balls post col", t_col_info)
+        print("Min time", t_min_col)
+        print("Final all balls", self._balls)
+        print("---------------------------------")
         return self
     
     def run(self, num_frames, animate = False):
@@ -120,24 +158,38 @@ class Simulation:
             f = pl.figure()
             ax = pl.axes(xlim=(-10, 10), ylim=(-10, 10))
             ax.add_artist(self._container.get_patch())
-            ax.add_patch(self._ball.get_patch())
+            ax.add_patch(self._balls.get_patch())
             
         for frame in range(num_frames):
-            KEi = (self._ball._mass*np.dot(self._ball.vel(),self._ball.vel()))/2
+            
+            # v_init = self._balls.vel()
+            # mass = self._balls._mass
+            # KEi = (mass*np.dot(v_init,v_init))/2
+            # t_col_impulse = self._balls.time_to_collision(self._container)
+            # container_per = -2*np.pi*self._container._radius # -ve sign as we define container with -ve radius
             self.next_collision()
-            KEf = (self._ball._mass*np.dot(self._ball.vel(),self._ball.vel()))/2
-            if abs(KEi - KEf)<0.001:
-                print("KE conserved")
-            else:
-                print("KE not conserved")
-            print("ball pos", self._ball.pos())
-            print(self._ball.get_patch())
+            #v_fin = self._balls.vel()
+            #KEf = (mass*np.dot(v_fin, v_fin))/2
+            
+            # if abs(KEi - KEf)<0.001:
+            #     print("KE conserved")
+            # else:
+            #     print("KE not conserved")
+            #     raise "KE not conserved"
+            # # print("ball pos", self._ball.pos())
+            # # print(self._ball.get_patch())
+            # '''
+            # Calculating pressure on container
+            # '''
+            # impulse = mass*(v_fin-v_init)
+            # impulse_mag = np.sqrt(np.dot(impulse, impulse))
+            # force = impulse_mag/t_col_impulse
+            # pressure = force/container_per
+            # print(f"Pressure from that collision: {pressure}")
             if animate:
                 pl.pause(0.01)
 
         if animate == True:
             pl.show()
     
-"""
-time to collide 0 for all so .move() foesnt actually move it cuz dt*vel = 0 so pos stays same. Need to update position.
-"""
+
