@@ -107,5 +107,12 @@ balls=[bb1, bb2, bb3]
 simul3 = bs.Simulation(c2, balls)
 
 simul3.next_collision().run(num_frames=2)
+#%%
+c3 = bs.Ball(np.inf, -10, [0,0], [0,0])
+bb5 = bs.Ball(1, 1, [0,0.5], [0,1])
+bb6 = bs.Ball(1, 1, [0,-1], [0,-1])
+balls2 = [bb5, bb6]
+simul4 = bs.Simulation(c3, balls2)
 
+simul4.next_collision().run(num_frames=7, animate = True)
 
