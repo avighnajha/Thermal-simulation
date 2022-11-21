@@ -98,15 +98,16 @@ simul2.next_collision().run(num_frames = 5, animate = True)
 '''
 Several balls
 '''
+c3 = bs.Ball(np.inf, -10, [0,0], [0,0])
 bb1 = bs.Ball(1, 1, [0,0], [0,1])
 bb2 = bs.Ball(1, 1, [0,9], [0,-1])
 bb3 = bs.Ball(1, 1, [5, 0], [1, 0])
 bb4 = bs.Ball(1, 1, [4, 0], [2, 0])
 
 balls=[bb1, bb2, bb3]
-simul3 = bs.Simulation(c2, balls)
+simul3 = bs.Simulation(c3, balls)
 
-simul3.next_collision().run(num_frames=2)
+simul3.next_collision().run(num_frames=50, animate = True)
 #%%
 c3 = bs.Ball(np.inf, -10, [0,0], [0,0])
 bb5 = bs.Ball(1, 1, [0,0.5], [0,1])
@@ -115,4 +116,28 @@ balls2 = [bb5, bb6]
 simul4 = bs.Simulation(c3, balls2)
 
 simul4.next_collision().run(num_frames=7, animate = True)
+#%%
+
+balls3 = []
+c4 = bs.Ball(np.inf, -10, [0,0], [0,0])
+   
+for r in range(3, 10, 3):  
+    for i in range(3, 10, 2):
+        splits = 2*np.pi/i
+        print(splits)
+        for j in range(i+1):
+            theta = splits*j
+            velocityx = np.random.uniform(-10,10)
+            velocityy = np.random.uniform(-10,10)
+            vel = np.random.uniform(-10, 10, [2, 1])
+            vel = np.array([velocityx, velocityy])
+            posx = r*np.cos(theta)
+            posy = r*np.sin(theta)
+            pos = np.array([posx, posy])
+            ball = bs.Ball(radius, mass, pos, vel)
+            balls3.append(ball)
+    
+
+simul5 = bs.Simulation(c4, balls3)
+simul5.run(num_frames=1, animate= True)    
 

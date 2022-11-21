@@ -18,16 +18,10 @@ class Ball:
         else:
             self._KE = self._mass*np.dot(self._velocity, self._velocity)/2
         if self._radius<0:
-            
-            self._patch = pl.Circle(self._position, -self._radius)
+            self._patch = pl.Circle(self._position, self._radius, ec = "b" ,fill = False)
         else:
-            self._patch = pl.Circle(self._position, self._radius)
-        # if self._radius <0:
-        #     self._patch = pl.Circle(position, radius, ec = "b" ,fill = False)
-        # else:
-        #     self._patch = pl.Circle(position, radius, fc = "r")
-        
-        #axes.add_patch(self.ball_patch)
+            self._patch = pl.Circle(self._position, self._radius, fc = "r")
+
     def __repr__(self):
         return f"Ball at {self._position}, with speed {self._velocity}"
     def pos(self):
@@ -35,11 +29,7 @@ class Ball:
     def vel(self):
         return self._velocity
     def get_patch(self):
-        
-        # if self._radius <0:
-        #     patch = pl.Circle(self.pos(), self._radius, ec = "b" ,fill = False)
-        # else:
-        #     patch = pl.Circle(self.pos(), self._radius, fc = "r")
+    
         return self._patch
     def time_to_collision(self, other):
         rel_vel = self.vel() - other.vel()
@@ -90,12 +80,7 @@ class Ball:
             v_norm_arr = v_norm*new_pos_norm
             v_par_arr = self.vel() - v_norm_arr
             final_v = v_par_arr - v_norm_arr
-            # print(self.vel(), self.pos(),other.vel())
-            # print(time, "time")
-            # print(new_pos, "new pos")
-            # print(new_pos_norm, "pos new")
-            # print(v_norm_arr, "v_norm")
-            # print(v_par_arr, "v parallel")
+
             self._velocity = final_v
         else:    
             rel_vel = self.vel() - other.vel()
@@ -111,45 +96,36 @@ class Ball:
     
 
 class Simulation:
-    pressure = 0
+    impulse_tot = 0
     t_container = 0
     def __init__(self,container, balls):
+        
         self._container = container
+        balls.append(self._container)
+        
         self._balls = balls
-        self._balls.append(self._container)
+        
     
-    def calc_pressure(self, balli_vel, ballf, perimeter):
+    def calc_impulse(self, balli_vel, ballf):
         vi = balli_vel
         vf = ballf.vel()
         mass = ballf._mass
         impulse = mass*(vf-vi)
         impulse_mag = np.sqrt(np.dot(impulse, impulse))
-        
-        force = impulse_mag/Simulation.t_container
-        #print(impulse, force, vi, vf)
-        col_pressure = force/perimeter
-        Simulation.pressure += col_pressure
-        Simulation.t_container = 0
-        print("Collision pressure: ", col_pressure)
-        return Simulation.pressure
+        Simulation.impulse_tot += impulse_mag
+        print("Collision impulse: ", impulse_mag)
+        print("Total Impulse: ", Simulation.impulse_tot)
+        return Simulation.impulse_tot
     
-    # def calc_KE(self, ball1, ball2):
-    #     if ball1._mass == np.inf:
-    #         KE1  = 0
-    #         KE2 = np.dot(ball2.vel(), ball2.vel())* ball2._mass/2
+    def calc_pressure(self, perimeter):
+        force = Simulation.impulse_tot/Simulation.t_container
+        pressure = force/perimeter
+        return pressure
         
-    #     elif ball2._mass == np.inf:
-    #         KE2  = 0
-    #         KE1 = np.dot(ball1.vel(), ball1.vel())* ball2._mass/2
-    #     else:
-    #         KE1 = np.dot(ball1.vel(), ball1.vel())* ball2._mass/2
-    #         KE2 = np.dot(ball2.vel(), ball2.vel())* ball2._mass/2
-    #     return [KE1, KE2]
     
     def next_collision(self):
         t_col_info = []
         t_min_col = np.inf
-        t_prev_min = np.inf
         #print("All Balls", self._balls)
         '''
         Here balls r double counted so need to optimise
@@ -173,6 +149,9 @@ class Simulation:
         
         print("Balls pre col", t_col_info)
         #print(t_col_info[1]._KE)
+        '''
+        Here regarding the intial stages of the balls only the velocity is stored but the whole ball objects stored for post collision. bEcasue velcoities change post collision so cant store full objects. Therefore whenever properties such as mass and radius needed we use the post collision versions
+        '''
         ball1i = t_col_info[0]
         ball2i = t_col_info[1]
         ball1i_vel = ball1i.vel()
@@ -197,59 +176,15 @@ class Simulation:
             #if t_min_col == 0:
             #    Simulation.t_container = t_prev_min
             Simulation.t_container+=t_min_col
-            perimeter = -2*np.pi*ball1f._radius
-            print(ball2i_vel, ball2f, perimeter)
-            self.calc_pressure(ball2i_vel, ball2f, perimeter)
-            print("Total Pressure: ", Simulation.pressure)
+            print(ball2i_vel, ball2f)
+            self.calc_impulse(ball2i_vel, ball2f)
         elif ball2i._mass == np.inf:
             # if t_min_col == 0:
             #     Simulation.t_container = t_prev_min
             Simulation.t_container+=t_min_col
-            perimeter = -2*np.pi*ball2f._radius
-            self.calc_pressure(ball1i_vel, ball1f, perimeter)
-            print("Total Pressure: ", Simulation.pressure)
+            self.calc_impulse(ball1i_vel, ball1f)
         else:
             Simulation.t_container+=t_min_col
-        '''
-        Checking for conservation of KE between balls befroe and after collision and calculating pressure 
-        '''
-        '''
-        Here regarding the intial stages of the balls only the velocity is stored but the whole ball objects stored for post collision. bEcasue velcoities change post collision so cant store full objects. Therefore whenever properties such as mass and radius needed we use the post collision versions
-        '''
-        
-        # if ball1i._mass == np.inf:
-        #     KEi1 = KEf1 = 0
-        #     KEi2 = np.dot(ball2i_vel, ball2i_vel)* ball2f._mass/2
-        #     KEf2 = np.dot(ball2f.vel(), ball2f.vel())* ball2f._mass/2
-        #     perimeter = 2*np.pi*ball1f._radius
-        #     self.calc_pressure(ball2i_vel, ball2f, perimeter)
-        #     print("Total Pressure: ", Simulation.pressure)
-
-            
-            
-        # elif ball2i._mass == np.inf:
-        #     KEi2 = KEf2 = 0
-        #     KEi1 = np.dot(ball1i_vel, ball1i_vel)* ball1f._mass/2
-        #     KEf1 = np.dot(ball1f.vel(), ball1f.vel())* ball1f._mass/2
-        #     perimeter = 2*np.pi*ball2f._radius
-        #     self.calc_pressure(ball1i_vel, ball1f, perimeter)
-        #     print("Total Pressure: ", Simulation.pressure)
-            
-        # else:
-        #     Simulation.t_container+=t_min_col #Adds the time till a collision with the container takes place
-        #     KEi1 = np.dot(ball1i.vel(), ball1i.vel())* ball1i._mass/2
-        #     KEi2 = np.dot(ball2i.vel(), ball2i.vel())* ball2i._mass/2
-        
-        #     KEf1 = np.dot(ball1f.vel(), ball1f.vel())* ball1f._mass/2
-        #     KEf2 = np.dot(ball2f.vel(), ball2f.vel())* ball2f._mass/2
-        
-        
-            
-        #t_col = self._balls.time_to_collision(self._container)
-        #print("v before col", self._balls.vel(), ", collision time", t_col, )
-        # self._balls.move(t_col)
-        # self._balls.collide(self._container)
-        #print(", v post col", self._balls.vel())
         
         print("Balls post col", t_col_info)
         if (KEi1 - KEf1)<0.001 and (KEi2 - KEf2)<0.001:
@@ -259,11 +194,34 @@ class Simulation:
         
         #print("Min time", t_min_col)
         #print("Final all balls", self._balls)
-        for ball in self._balls:
-            print(ball.get_patch().center)
+        print("Total pressure till here: ", self.calc_pressure(2*np.pi*10))
         print("---------------------------------")
         return self
-    
+    def generate_balls(self):
+        balls = []
+        vel_overall = [0,0]
+        for r in range(3, 10, 3):
+            splits = 2*np.pi/r
+            print("r = ", r)
+            for j in range(r):
+                radius = 0.1
+                mass = 1
+                theta = splits*j
+                velocityx = np.random.uniform(-10,10)
+                velocityy = np.random.uniform(-10,10)
+                vel = np.array([velocityx, velocityy])
+                vel_overall+=vel
+                posx = r*np.cos(theta)
+                posy = r*np.sin(theta)
+                pos = np.array([posx, posy])
+                ball = Ball(radius, mass, pos, vel)
+                balls.append(ball)
+        vel_remaining = -vel_overall
+        ball_center = Ball(1, 1, [0,0], vel_remaining)
+        balls.append(ball_center)
+        #balls.append(self._container)
+        return balls
+        
     def run(self, num_frames, animate = False):
         if animate:
             f = pl.figure()
@@ -299,7 +257,7 @@ class Simulation:
             # pressure = force/container_per
             # print(f"Pressure from that collision: {pressure}")
             if animate:
-                pl.pause(0.01)
+                pl.pause(0.001)
 
             if animate == True:
                 pl.show()
