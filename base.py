@@ -1,6 +1,6 @@
 import numpy as np
 import pylab as pl
-
+import matplotlib.pyplot as plt
 #%%
 
 class Ball:
@@ -17,7 +17,7 @@ class Ball:
             self._KE = 0
         else:
             self._KE = self._mass*np.dot(self._velocity, self._velocity)/2
-        if self._radius<0:
+        if self._mass == np.inf:
             self._patch = pl.Circle(self._position, self._radius, ec = "b" ,fill = False)
         else:
             self._patch = pl.Circle(self._position, self._radius, fc = "r")
@@ -50,8 +50,9 @@ class Ball:
         
         if (b**2 - (4*a*c))<0 :
             return None
-        elif b>0 and other._mass != np.inf:
+        elif b>0 and self._mass!=np.inf and other._mass != np.inf:
             return None
+        #print(f"value of b: {b}, Both possible ts = {(-b + np.sqrt(b**2 - 4*a*c))/(2*a),(-b - np.sqrt(b**2 - 4*a*c))/(2*a)}")
         t = min((-b + np.sqrt(b**2 - 4*a*c))/(2*a),(-b - np.sqrt(b**2 - 4*a*c))/(2*a))
         if t<=0:
             t = max((-b + np.sqrt(b**2 - 4*a*c))/(2*a),(-b - np.sqrt(b**2 - 4*a*c))/(2*a))       
@@ -96,14 +97,47 @@ class Ball:
     
 
 class Simulation:
-    impulse_tot = 0
+    impulse_tot = 0 # Seems to be a problem here cuz class variable carries over to all isntances of class. so my pressure calcs have all been adding up
     t_container = 0
-    def __init__(self,container, balls):
+    def __init__(self,container, velfactor):
         
         self._container = container
-        balls.append(self._container)
         
+        #balls = generate_balls()
+          
+        balls = []
+        rs = [3, 6, 9]
+        
+        vel_overall = [0,0]
+        for r in rs:
+            splits = 2*np.pi/r
+            
+            for j in range(r):
+                radius = 0.5
+                mass = 1
+                theta = splits*j
+                velocityx = np.random.uniform(-10,10)
+                velocityy = np.random.uniform(-10,10)
+                vel = velfactor*np.array([velocityx, velocityy])
+                vel_overall+=vel
+                if r == 9:
+                    r = 8.5
+                posx = r*np.cos(theta)
+                posy = r*np.sin(theta)
+                pos = np.array([posx, posy])
+                ball = Ball(radius, mass, pos, vel)
+                balls.append(ball)
+        vel_remaining = -vel_overall
+        ball_center = Ball(1, 1, [0,0], vel_remaining)
+        balls.append(ball_center)
+        
+        balls.append(self._container)
         self._balls = balls
+        '''
+        Added below to arrays to allow me to track the pressures at each container collisiona nd what times they happen so I can plot the vairation of pressure over time.
+        '''
+        self._press_evol = []
+        self._col_times = []
         
     
     def calc_impulse(self, balli_vel, ballf):
@@ -122,14 +156,52 @@ class Simulation:
         pressure = force/perimeter
         return pressure
         
-    
-    def next_collision(self):
+    def plot_position(self, balls):
+        positions = []
+        for ball in balls:
+            positions.append(np.sqrt(np.dot(ball.pos(), ball.pos())))                             
+        #print(positions)
+        plt.hist(positions)
+        plt.title("Distance from center")
+        plt.xlabel("Distance from center")
+        plt.ylabel("Number of balls")
+        plt.grid()
+        plt.show()
+    def plot_pair_distance(self, balls):
+        distances = []
+        done = {}
+        for i in range(len(balls)):
+            for j in range(len(balls)):
+                if i == j:
+                    continue
+                if f"[{j},{i}]" in done:
+                    continue
+                else:
+                    done[f"[{i},{j}]"] = True
+                    
+                distance = balls[i].pos() - balls[j].pos()
+                distance_mag = np.sqrt(np.dot(distance, distance))
+                distances.append(distance_mag)
+        plt.hist(distances)
+        plt.title("Pair distances")
+        plt.xlabel("Distance between pair of balls ")
+        plt.ylabel("Number of balls")
+        plt.grid()
+        plt.show()
+    def plot_pressure_evol(self):
+        plt.plot(self._col_times, self._press_evol)
+        plt.xlabel("Time (s)")
+        plt.ylabel("Pressure")
+        plt.grid()
+        plt.show()
+        
+    def next_collision(self, plots = True):
         t_col_info = []
         t_min_col = np.inf
         #print("All Balls", self._balls)
         '''
         Here balls r double counted so need to optimise
-        '''
+        ''' 
         for i in range(len(self._balls)):
             for j in range(len(self._balls)):
                 if i ==j:
@@ -147,7 +219,7 @@ class Simulation:
         for k in range(len(self._balls)):
             self._balls[k].move(t_min_col)
         
-        print("Balls pre col", t_col_info)
+        #print("Balls pre col", t_col_info)
         #print(t_col_info[1]._KE)
         '''
         Here regarding the intial stages of the balls only the velocity is stored but the whole ball objects stored for post collision. bEcasue velcoities change post collision so cant store full objects. Therefore whenever properties such as mass and radius needed we use the post collision versions
@@ -158,7 +230,7 @@ class Simulation:
         ball2i_vel = ball2i.vel()
         
         KEi1 = ball1i._KE
-        KEi2 = 0 #Change it to self._KE
+        KEi2 = ball2i._KE #Change it to self._KE
         t_col_info[0].collide(t_col_info[1])
         
        
@@ -166,17 +238,14 @@ class Simulation:
         ball2f = t_col_info[1]
         
         KEf1 = ball1f._KE
-        KEf2 = 0 #Change it to self._KE
+        KEf2 = ball2f._KE #Change it to self._KE
         #print(ball1i_vel, ball1f)
-        
-        '''
-        For pressure calc need to add functionality for if 2 balls collide at the same time
-        '''
+    
         if ball1i._mass == np.inf:
             #if t_min_col == 0:
             #    Simulation.t_container = t_prev_min
             Simulation.t_container+=t_min_col
-            print(ball2i_vel, ball2f)
+            #print(ball2i_vel, ball2f)
             self.calc_impulse(ball2i_vel, ball2f)
         elif ball2i._mass == np.inf:
             # if t_min_col == 0:
@@ -186,43 +255,50 @@ class Simulation:
         else:
             Simulation.t_container+=t_min_col
         
-        print("Balls post col", t_col_info)
+        #print("Balls post col", t_col_info)
         if (KEi1 - KEf1)<0.001 and (KEi2 - KEf2)<0.001:
             print("ALL KE CONSERVED")
         else:
             print("KEs not conserved")
-        
-        #print("Min time", t_min_col)
+        if plots:
+            self.plot_position(self._balls)
+            self.plot_pair_distance(self._balls)
+        print(f'''
+              Collided balls
+              Initially: {ball1i, ball2i}
+              Finally: {ball1f, ball2f}
+              ''')
+        if t_min_col <0:
+            
+            print(f'''
+                  ###########
+                  NEGATIVE TIME FOR COLLISION
+                  Balls initiAally = {ball1i, ball2i}
+                  Balls post = {ball1f, ball2f}
+                  ###########
+                  ''')
+            
+        print("Min time:", t_min_col)
+        print("Total time:", Simulation.t_container)
         #print("Final all balls", self._balls)
+        '''
+        Below appends are to keep track of times at which collissions happen and the pressure at those instances.
+        '''
+        self._press_evol.append(self.calc_pressure(2*np.pi*10))
+        self._col_times.append(Simulation.t_container)
         print("Total pressure till here: ", self.calc_pressure(2*np.pi*10))
         print("---------------------------------")
         return self
-    def generate_balls(self):
-        balls = []
-        vel_overall = [0,0]
-        for r in range(3, 10, 3):
-            splits = 2*np.pi/r
-            print("r = ", r)
-            for j in range(r):
-                radius = 0.1
-                mass = 1
-                theta = splits*j
-                velocityx = np.random.uniform(-10,10)
-                velocityy = np.random.uniform(-10,10)
-                vel = np.array([velocityx, velocityy])
-                vel_overall+=vel
-                posx = r*np.cos(theta)
-                posy = r*np.sin(theta)
-                pos = np.array([posx, posy])
-                ball = Ball(radius, mass, pos, vel)
-                balls.append(ball)
-        vel_remaining = -vel_overall
-        ball_center = Ball(1, 1, [0,0], vel_remaining)
-        balls.append(ball_center)
-        #balls.append(self._container)
-        return balls
-        
-    def run(self, num_frames, animate = False):
+    def calc_temp(self, vel_factor):
+        totalKE = 0
+        k = 1.38e-23
+        for ball in self._balls:
+            
+            totalKE+=(vel_factor**2)*ball._KE
+        temp = 2*totalKE/(3*k)
+        return temp
+            
+    def run(self, num_frames, animate = False, plots = True):
         if animate:
             f = pl.figure()
             ax = pl.axes(xlim=(-10, 10), ylim=(-10, 10))
@@ -230,32 +306,8 @@ class Simulation:
                 ax.add_patch(self._balls[i].get_patch())
             
         for frame in range(num_frames):
+            self.next_collision(plots)
             
-            # v_init = self._balls.vel()
-            # mass = self._balls._mass
-            # KEi = (mass*np.dot(v_init,v_init))/2
-            # t_col_impulse = self._balls.time_to_collision(self._container)
-            # container_per = -2*np.pi*self._container._radius # -ve sign as we define container with -ve radius
-            self.next_collision()
-            
-            #v_fin = self._balls.vel()
-            #KEf = (mass*np.dot(v_fin, v_fin))/2
-            
-            # if abs(KEi - KEf)<0.001:
-            #     print("KE conserved")
-            # else:
-            #     print("KE not conserved")
-            #     raise "KE not conserved"
-            # # print("ball pos", self._ball.pos())
-            # # print(self._ball.get_patch())
-            # '''
-            # Calculating pressure on container
-            # '''
-            # impulse = mass*(v_fin-v_init)
-            # impulse_mag = np.sqrt(np.dot(impulse, impulse))
-            # force = impulse_mag/t_col_impulse
-            # pressure = force/container_per
-            # print(f"Pressure from that collision: {pressure}")
             if animate:
                 pl.pause(0.001)
 

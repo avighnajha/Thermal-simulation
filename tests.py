@@ -90,9 +90,12 @@ simul.next_collision().run(num_frames=5, animate = True)
 '''
 Testing Pressure
 '''
-ball8 = bs.Ball(1, 1, [0,0], [0,1])
-simul2 = bs.Simulation(c2, ball8)
-simul2.next_collision().run(num_frames = 5, animate = True)
+balls8 = [bs.Ball(1, 1, [0,0], [0,1])]
+container = bs.Ball(np.inf, -10, [0,0], [0,0])
+simul2 = bs.Simulation(container, 1)
+simul2.next_collision().run(num_frames = 5, animate = False, plots = False)
+
+
 
 #%%
 '''
@@ -118,26 +121,9 @@ simul4 = bs.Simulation(c3, balls2)
 simul4.next_collision().run(num_frames=7, animate = True)
 #%%
 
-balls3 = []
+#balls3 = bs.Simulation.generate_balls()
 c4 = bs.Ball(np.inf, -10, [0,0], [0,0])
-   
-for r in range(3, 10, 3):  
-    for i in range(3, 10, 2):
-        splits = 2*np.pi/i
-        print(splits)
-        for j in range(i+1):
-            theta = splits*j
-            velocityx = np.random.uniform(-10,10)
-            velocityy = np.random.uniform(-10,10)
-            vel = np.random.uniform(-10, 10, [2, 1])
-            vel = np.array([velocityx, velocityy])
-            posx = r*np.cos(theta)
-            posy = r*np.sin(theta)
-            pos = np.array([posx, posy])
-            ball = bs.Ball(radius, mass, pos, vel)
-            balls3.append(ball)
-    
 
-simul5 = bs.Simulation(c4, balls3)
-simul5.run(num_frames=1, animate= True)    
+simul5 = bs.Simulation(c4)
+simul5.run(num_frames=50, animate= True)    
 
