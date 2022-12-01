@@ -53,6 +53,15 @@ np.testing.assert_array_equal(b2.collide(c).vel(), [1,0])
 
 #%%
 '''
+Investigating error where ball aligned with x axis or y axis ends up not bouncing back and gives negative time
+'''
+ball100 = bs.Ball(1, 1, [0,0], [100, 2])
+c100 = bs.Ball(np.inf, -10, [0,0], [0,0])
+#%%
+print(ball100.collide(c100).vel())
+
+#%%
+'''
 Still collide feature but with 2 different masses
 '''
 ball4 = bs.Ball(2, 1, [0,5], [0,0])

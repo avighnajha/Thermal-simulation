@@ -6,7 +6,7 @@ bs.Simulation.impulse_tot = 0
 bs.Simulation.t_container = 0
 container = bs.Ball(np.inf, -10, [0,0], [0,0])
 simul = bs.Simulation(container, 2)
-simul.run(num_frames=3000, animate = True, plots = False)
+simul.run(num_frames=3, animate = True, plots = False)
 #%%
 simul.plot_pressure_evol()
 #%%
@@ -29,5 +29,17 @@ FIX: added check for negative time in next collision but not sure if fixed yet
 '''
 
 '''
-Balls now leaving the ball when they collide around the edge
+Balls now leaving the ball when they collide around the edge - Only happens if I start ignoring t negative
+'''
+
+'''
+Need to change back pause to 0.001 and change back ball generation 
+'''
+'''
+
+Error causing time to be 0 was that i was moving balls and then calling collide so the balls would be at 0 time to collision when collide called. So now passing min time as an argument 
+'''
+
+'''
+Now time isnt going 0 anymore but very very small and i think thois is because the velocity isnt actually changing so it seems lioke ball gonna collide with the container again. so this keeps happeneing. Sam collision over and over
 '''
