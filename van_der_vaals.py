@@ -1,11 +1,16 @@
+'''
+This file is responsible for investiagting he ideal gas law, and determining a value for van der waals coefficients.
+'''
+
 import matplotlib.pyplot as plt
 import numpy as np
-import base as bs
+import balls as bs
+import simulation as sm
 from no_balls import collect_data_no_balls
 from scipy.optimize import curve_fit
 #%%
 '''
-Investigate Ideal gas law - Basically just runing 1 cycle of collect_data_no_balls-2000 collisions- with all the different v_maxs. Going to plot P/T against v_maxs to show it is constant.
+Investigate Ideal gas law - Basically just runing 1 cycle of collect_data_no_balls-3000 collisions- with all the different v_maxs. Going to plot P/T against v_maxs to show it is constant.
 '''
 v_maxs =  [10, 20,30, 40, 80]
 press_ideal, temp_ideal = collect_data_no_balls(v_maxs, no_balls = 150, ball_rad = 0.5)
@@ -35,7 +40,7 @@ Functions defined for later fits
 '''
 
 def waals(T, b):
-    N = 30
+    N = 30 # Needs to be varied depending on the number of balls used in the simulation.
     k = 1.38e-23
     V = np.pi*20**2
     return N*k*T/(V-(N*b))
@@ -47,29 +52,8 @@ def ideal(T, N):
     k = 1.38e-23
     V = np.pi*20*82
     return N*k*T/V
-#%%
-params, cov = curve_fit(line, temp_ideal, press_ideal)
 
-fit_y = []
-for i in temp_ideal:
-    fit_y.append(line(i, params[0],params[1]))
-plt.plot(temp_ideal, press_ideal, "x")
-plt.plot(temp_ideal, fit_y)
-plt.ylabel("Pressure")
-plt.xlabel("Temperature")
-plt.title("Pressure vs Temperature")
-plt.grid()
 
-#%%
-m = params[0]
-V = np.pi*20**2
-k = 1.38e-23
-N = 150
-
-b = ((m*V) - (N*k))/(m*N)
-
-err = (cov[0][0]/m)*b
-print(f"b = {b} +/- {err}")
 #%%
 '''
 Investigating ideal gas law for different ball radii. Runs 4 repeatitions with different v_maxs for each ball repeatition.
@@ -87,7 +71,7 @@ for rad in ball_rads:
 #%%
 b_vals = []
 b_errs = []
-fig, ax = plt.subplots(1, 2, figsize = (10, 5))
+fig, ax = plt.subplots(2, 1, figsize = (5, 10))
 
 for data in data_ball_rads:
     temps = data[1]
@@ -158,7 +142,7 @@ for data in data_ball_rads:
     errs = PT_unc
 
 plt.plot(ball_rads, PT, "x", c = "r", markerfacecolor = "b", markeredgecolor = "b", linestyle = "-")
-#plt.errorbar(ball_rads, PT, yerr = PT_unc, fmt = "none")
+plt.errorbar(ball_rads, PT, yerr = PT_unc, fmt = "none")
 plt.grid()
 plt.ylabel("P/T")
 plt.xlabel("Ball radius")

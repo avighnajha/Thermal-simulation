@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import base as bs
+import balls as bs
+import simulation as sm
 #%%
 '''
 Change in P-T for different number of balls
@@ -37,10 +38,10 @@ def collect_data_no_balls(v_maxs, no_balls = 100, ball_rad = 0.5):
     final_temps = []
     for j in v_maxs:
         print(f"Current v_max = {j}")
-        bs.Simulation.impulse_tot = 0
-        bs.Simulation.t_container = 0
+        sm.Simulation.impulse_tot = 0
+        sm.Simulation.t_container = 0
         container2 = bs.Ball(np.inf, -20, [0,0], [0,0])
-        simul2 = bs.Simulation(container2, no_balls = no_balls,v_max = j, ball_rad=ball_rad)
+        simul2 = sm.Simulation(container2, no_balls = no_balls,v_max = j, ball_rad=ball_rad)
         simul2.run(num_frames=3000, animate = False, plots= False)
         fin_pressure = simul2.calc_pressure(rad_con=20)
         pressures_balls.append(fin_pressure)
@@ -78,18 +79,24 @@ Here "data in all_data_no_balls" takes each set of data, where data has 2 arrays
 '''
 
 PTs = []
-
+PT_err = []
 for data in all_data_no_balls:
     press= data[0]
     temp =data[1]
     PT_temp = []
-    
+    P_err = np.std(press)
+    P_rel = P_err/np.mean(press)
+    T_err = np.std(temp)
+    T_rel = T_err/np.mean(temp)
+    total_rel = P_rel+T_rel
     for i in range(len(temp)):
         PT_temp.append(press[i]/temp[i])
+    PT_err.append(total_rel*np.mean(PT_temp))
     PTs.append(np.mean(PT_temp)) 
     
     
 plt.plot(pos_balls, PTs, "x", linestyle = "-")
+plt.errorbar(pos_balls, PTs, yerr = PT_err, fmt = "none", capsize = 3)
 plt.ylim(0,2e-26) #vary depending on data and parameters to make data visible
 plt.title("P/T vs N")
 plt.xlabel("Number of balls")

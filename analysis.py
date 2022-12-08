@@ -3,18 +3,21 @@ This file contains initial pressure, tempreture, kinetic energy and angular mome
 '''
 import numpy as np
 import matplotlib.pyplot as plt
-import base as bs
+import balls as bs
+import simulation as sm
 import scipy.stats as stats
+import time
+
 #%%
 '''
 Getting a better plot for inter ball seperation at the end of 3000 collisions of 150 balls.
 '''
 
-bs.Simulation.impulse_tot = 0
-bs.Simulation.t_container = 0
+sm.Simulation.impulse_tot = 0
+sm.Simulation.t_container = 0
 container = bs.Ball(np.inf, -20, [0,0], [0,0]) 
-simul_sep = bs.Simulation(container, no_balls=150, ball_rad=1, v_max = 80)
-simul_sep.run(num_frames=100, animate = True, plots = False)
+simul_sep = sm.Simulation(container, no_balls=150, ball_rad=1, v_max = 80)
+simul_sep.run(num_frames=3000, animate = True, plots = False)
 #%%
 '''
 Plotting the distance between pairs of balls and distance from balls to center of container as histograms
@@ -27,10 +30,10 @@ simul_sep.plot_position()
 '''
 Initial simulation to get temp and press values
 '''
-bs.Simulation.impulse_tot = 0
-bs.Simulation.t_container = 0
+sm.Simulation.impulse_tot = 0
+sm.Simulation.t_container = 0
 container = bs.Ball(np.inf, -20, [0,0], [0,0])
-simul = bs.Simulation(container, no_balls=60)
+simul = sm.Simulation(container, no_balls=60)
 simul.run(num_frames=3000, animate = False, plots = False)
  #%%
 '''
@@ -42,89 +45,16 @@ press = simul.calc_pressure(20)
 print("Tempreture: ", temp)
 print("Pressure: ", press)
 
-#%%
-'''
-Temp evol, press evol, angular momentum evol and KE evol calc for different vel factor
-'''
-ang_evols = []
-pres_evols = []
-temp_evols = []
-v_maxs = [20, 40, 80]
-for i in v_maxs: # Different vel factors
-    print(f'''
-          VELOCITY = {i}
-          ''')
-    bs.Simulation.impulse_tot = 0
-    bs.Simulation.t_container = 0
-    container = bs.Ball(np.inf, -20, [0,0], [0,0]) 
-    simul = bs.Simulation(container, no_balls=63, v_max = i)
-    simul.run(num_frames=3000, animate = False, plots = False)
-    temp = simul.calc_temp()
-    press = simul.calc_pressure(20)
-    print("Tempreture: ", temp)
-    print("Pressure: ", press)
-    ang_evols.append(simul._ang_mom_evol)
-    pres_evols.append(simul._press_evol)
-    temp_evols.append(simul._temp_evol)
-#%%
-'''
-Plotting evolution of pressure, KE and ang mom plots
-'''
-simul.plot_pressure_evol()
-simul.plot_ang_mom()
-simul.plot_ke_evol()
-simul.plot_mom_evol()
-#%%
-'''
-Attempt to plot varying T, KE, P and L evol for different vel factors in the same plot as a 3x3 set of subplots.
-'''
-times = simul._col_times
-fig, ax = plt.subplots(3, 3, figsize = (10, 10))
-idx_vel_factor = {0: 1,
- 1: 2,
- 2: 4}
-for i in range(0, 3):
-    for j in range(0, 3):
-        if i == 0:
-            if j ==0:
-                ax[i][j].set_ylabel("Angular momentum")
-                
-            ax[i][j].plot(times,ang_evols[j])
-            ax[i][j].set_ylim([0, 1000])
-            ax[i][j].set_xlabel("Time")
-            ax[i][j].set_ylabel("Angular momentum")
-            ax[i][j].set_title(f"Angular momentum for velocity factor: {idx_vel_factor[j]}")
-            plt.grid()
-        elif i == 1:
-            if j ==0:
-                ax[i][j].set_ylabel("Pressure")
-            ax[i][j].plot(times,pres_evols[j])
-            plt.ylabel("Pressure")
-            plt.xlabel("Time")
-            ax[i][j].set_title(f"Pressure for velocity factor: {idx_vel_factor[j]}")
-            plt.grid()
-        elif i == 2:
-            if j ==0:
-                ax[i][j].set_ylabel("Tempreture")
-            ax[i][j].plot(times,temp_evols[j])
-            ax[i][j].set_xlabel("Time")
-            plt.ylabel("Tempreture")
-            ax[i][j].set_title(f"Tempreture for velocity factor: {idx_vel_factor[j]}")
-            plt.grid()
-
-plt.grid()
-plt.show()
-
 
 #%%
 
 '''
 Investigating vel distibribution
 '''
-bs.Simulation.impulse_tot = 0
-bs.Simulation.t_container = 0
+sm.Simulation.impulse_tot = 0
+sm.Simulation.t_container = 0
 container3 = bs.Ball(np.inf, -20, [0,0], [0,0])
-simul3 = bs.Simulation(container3,no_balls = 100, ball_rad=0.5,  v_max = 100)
+simul3 = sm.Simulation(container3,no_balls = 100, ball_rad=0.5,  v_max = 100)
 simul3.run(num_frames=1000, animate = False, plots= True)
 
 #%%
@@ -180,4 +110,3 @@ print(f'''
       ''')
 
 #%%
-

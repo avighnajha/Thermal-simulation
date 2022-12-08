@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import base as bs
+import balls as bs
+import simulation as sm
 #%%
 '''
 Automating repeat simulations and collecting pressure vs Temp values for different radii of container.
@@ -29,11 +30,11 @@ def collect_r_data(v_maxs, r_con):
     pressures = []
     temps = []
     for i in v_maxs:
-        bs.Simulation.impulse_tot = 0
-        bs.Simulation.t_container = 0
+        sm.Simulation.impulse_tot = 0
+        sm.Simulation.t_container = 0
         container = bs.Ball(np.inf, -r_con, [0,0], [0,0])
-        simul = bs.Simulation(container, 2000, no_balls = 150, v_max = i, ball_rad=1)
-        simul.run(num_frames=1, animate = False, plots = False)
+        simul = sm.Simulation(container, no_balls = 150, v_max = i, ball_rad=1)
+        simul.run(num_frames=3000, animate = False, plots = False)
         fin_pressure = simul.calc_pressure(r_con)
         pressures.append(fin_pressure)
         temp = simul.calc_temp()
